@@ -29,18 +29,22 @@ func (self *Relation) First() (interface{}, error) {
 
   instance := cartographer.New()
 
-  mapped, err := instance.Map(results, self.table.Model, func(element reflect.Value) {
+  mapped, err := instance.Map(results, self.table.Model, func(element reflect.Value) (err error) {
     field := element.FieldByName("Model")
     if field.CanSet() {
       base := new(Model)
-      
+
       // Attach the replicated model and self to base model struct.
       base.definition = element.Interface()
       base.table = self.table
 
       // Set value of embedded Model type to newly created base.
       field.Set(reflect.ValueOf(base))
+    } else {
+      err = errors.New("Unable to set Model field.")
     }
+
+    return
   })
 
   return mapped[0], err
