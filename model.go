@@ -13,7 +13,7 @@ type Model struct {
 
 func (self *Model) Save() error {
   var (
-    table = self.table.TableName
+    table = self.table.Name
     model = reflect.TypeOf(self.definition)
   )
 

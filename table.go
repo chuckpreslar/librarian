@@ -6,8 +6,8 @@ import (
 )
 
 type Table struct {
-  TableName string                    // Name of the table the relation connects to.
-  Model     interfaces.ModelInterface // Model calling Table's New method generates.
+  Name  string                    // Name of the table the relation connects to.
+  Model interfaces.ModelInterface // Model calling Table's New method generates.
 }
 
 func (self Table) New() interfaces.ModelInterface {
