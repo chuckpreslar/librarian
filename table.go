@@ -33,3 +33,7 @@ func (self Table) New() interfaces.ModelInterface {
 
   return replica.Interface().(interfaces.ModelInterface)
 }
+
+func (self Table) First() (interface{}, error) {
+  return createRelation(self).First()
+}
