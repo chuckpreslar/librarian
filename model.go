@@ -22,6 +22,7 @@ func (self *Model) IsValid() bool {
 }
 
 func (self *Model) Save() error {
+  fmt.Println(self.definition)
   return nil
 }
 
