@@ -2,10 +2,10 @@ package librarian
 
 import (
   "errors"
-  "reflect"
+  "github.com/chuckpreslar/cartographer"
   "github.com/chuckpreslar/codex"
   "github.com/chuckpreslar/codex/tree/managers"
-  "github.com/chuckpreslar/cartographer"
+  "reflect"
 )
 
 type Relation struct {
@@ -31,6 +31,7 @@ func (self *Relation) First() (interface{}, error) {
 
   mapped, err := instance.Map(results, self.table.Model, func(element reflect.Value) (err error) {
     field := element.FieldByName("Model")
+
     if field.CanSet() {
       base := new(Model)
 
