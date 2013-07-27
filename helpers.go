@@ -7,11 +7,11 @@ import (
   "strings"
 )
 
-const BIND = `?`
+const BINDING_CHARACTER = `?`
 
 func parseStringBinding(formatter string, bindings ...interface{}) string {
   for _, binding := range bindings {
-    formatter = strings.Replace(formatter, BIND, tagBindingVariable(binding), 1)
+    formatter = strings.Replace(formatter, BINDING_CHARACTER, tagBindingVariable(binding), 1)
   }
   
   return formatter

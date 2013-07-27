@@ -8,7 +8,13 @@ type Table struct {
 }
 
 func (self Table) New() ModelInterface {
-  return nil
+  var replica, err = CARTOGRAPHER.CreateReplica(self.Model, createModel(self, true))
+
+  if nil != err {
+    panic(err)
+  }
+
+  return replica.Interface().(ModelInterface)
 }
 
 func (self Table) DestroyAll() error {

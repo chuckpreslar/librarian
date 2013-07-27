@@ -28,9 +28,27 @@ type User struct {
 // Now define your `Table` that interacts with this model.
 
 var Users = librarian.Table{
-  Name: "users", // The name of the table in your database.
-  Model: User{}, // The model that should be initialized/populated when interacting with the table.
+  Name: "users",   // The name of the table in your database.
+  Model: User{},   // The model that should be initialized/populated when interacting with the table.
+  PrimaryKey: "id" // The primary key for the table.
 }
+```
+
+## Basics
+
+### Querying
+
+To select only certain columns from a table, you may pass their name's to your table's Select method.You may pass their name's as how they are represented on your struct, or their column represented by the fields `db` tag.
+
+```go
+  // Continuing from out `Usage` example above.
+  Users.Select("id", "first_name").All()
+```
+
+To filter the results returned, use your tables Where method.  Currently, the Where method only accepts strings, replacing all binding charaters (`?`) with the additional arguments supplied.  Columns listed within the formatter string must be as they appear in the database.
+
+```go
+  Users.Where("first_name = ? AND email LIKE ?", "Jon", "%@example.com").All()
 ```
 
 
