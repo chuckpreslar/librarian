@@ -1,6 +1,8 @@
 package librarian
 
 import (
+  "github.com/chuckpreslar/cartographer"
+  "reflect"
   "fmt"
   "strings"
 )
@@ -21,5 +23,24 @@ func tagBindingVariable(binding interface{}) string {
     return fmt.Sprintf("'%v'", binding)
   default:
     return fmt.Sprintf("%v", binding)
+  }
+}
+
+func createModel(table Table, isNew bool) cartographer.Hook {
+  return func(replica reflect.Value) (err error) {
+    base := new(Model)
+    embedded := replica.Elem().FieldByName("Model")
+
+    base.definition = replica.Interface().(ModelInterface)
+    base.table = table
+    base.values, err = CARTOGRAPHER.FieldValueMapFor(replica.Interface())
+
+    if isNew {
+      base.isNew = true
+    }
+
+    embedded.Set(reflect.ValueOf(base))
+
+    return
   }
 }

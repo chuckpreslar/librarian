@@ -52,6 +52,10 @@ func (self *Relation) Unique() *Relation {
 }
 
 func (self *Relation) Order(orderings ...string) *Relation {
+  for _, ordering := range orderings {
+    self.Mananger.Order(ordering)
+  }
+
   return self
 }
 
@@ -88,7 +92,15 @@ func (self *Relation) First() (interface{}, error) {
     self.Mananger.Order(self.Accessor(column).Asc())
   }
 
-  return self.Mananger.ToSql()
+  results, err := self.All()
+
+  if nil != err {
+    return nil, err
+  } else if 0 >= len(results) {
+    return nil, nil
+  }
+
+  return results[0], nil
 }
 
 func (self *Relation) Last() (interface{}, error) {
@@ -104,11 +116,37 @@ func (self *Relation) Last() (interface{}, error) {
     self.Mananger.Order(self.Accessor(column).Desc())
   }
 
-  return self.Mananger.ToSql()
+  results, err := self.All()
+
+  if nil != err {
+    return nil, err
+  } else if 0 >= len(results) {
+    return nil, nil
+  }
+
+  return results[0], nil
 }
 
-func (self *Relation) All() ([]interface{}, error) {
-  return nil, nil
+func (self *Relation) All() (results []interface{}, err error) {
+  sql, err := self.Mananger.ToSql()
+
+  if err != nil {
+    return
+  }
+
+  statement, err := connection.session.Prepare(sql)
+
+  if err != nil {
+    return
+  }
+
+  rows, err := statement.Query()
+
+  if err != nil {
+    return
+  }
+
+  return CARTOGRAPHER.Map(rows, self.Table.Model, createModel(self.Table, false))
 }
 
 func InitializeRelation(table Table) (relation *Relation) {
