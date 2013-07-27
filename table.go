@@ -15,12 +15,12 @@ func (self Table) DestroyAll() error {
   return nil
 }
 
-func (self Table) Select(columns ...interface{}) *Relation {
-  return nil
+func (self Table) Select(columns ...string) *Relation {
+  return InitializeRelation(self).Select(columns...)
 }
 
 func (self Table) Where(conditions ...interface{}) *Relation {
-  return nil
+  return InitializeRelation(self).Where(conditions...)
 
 }
 
@@ -32,7 +32,7 @@ func (self Table) Unique() *Relation {
   return nil
 }
 
-func (self Table) Order() *Relation {
+func (self Table) Order(orderings ...string) *Relation {
   return nil
 }
 
@@ -44,26 +44,26 @@ func (self Table) Having() *Relation {
   return nil
 }
 
-func (self Table) Limit() *Relation {
-  return nil
+func (self Table) Limit(limit int) *Relation {
+  return InitializeRelation(self).Limit(limit)
 }
 
-func (self Table) Offset() *Relation {
-  return nil
+func (self Table) Offset(offset int) *Relation {
+  return InitializeRelation(self).Offset(offset)
 }
 
 func (self Table) Lock() *Relation {
   return nil
 }
 
-func (self Table) First() ([]interface{}, error) {
-  return nil, nil
+func (self Table) First() (interface{}, error) {
+  return InitializeRelation(self).First()
 }
 
-func (self Table) Last() ([]interface{}, error) {
-  return nil, nil
+func (self Table) Last() (interface{}, error) {
+  return InitializeRelation(self).Last()
 }
 
 func (self Table) All() ([]interface{}, error) {
-  return nil, nil
+  return InitializeRelation(self).All()
 }
