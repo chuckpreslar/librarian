@@ -11,29 +11,17 @@ type ModelInterface interface {
 type ModelInterfaces []ModelInterface
 
 type Model struct {
-  table         Table
-  definition    ModelInterface
-  initialValues map[string]interface{}
-  isNew         bool
+  table      Table
+  definition ModelInterface
+  values     map[string]interface{}
+  isNew      bool
 }
 
 func (self *Model) IsNew() bool {
-  return self.isNew
+  return false
 }
 
 func (self *Model) IsModified() bool {
-  currentValues, err := mapper.FieldValueMapFor(self.definition)
-
-  if nil != err {
-    panic(err)
-  }
-
-  for key, value := range currentValues {
-    if self.initialValues[key] != value {
-      return true
-    }
-  }
-
   return false
 }
 
