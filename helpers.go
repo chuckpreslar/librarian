@@ -1,9 +1,11 @@
 package librarian
 
 import (
-  "github.com/chuckpreslar/cartographer"
-  "reflect"
   "fmt"
+  "github.com/chuckpreslar/cartographer"
+  "github.com/chuckpreslar/codex"
+  "github.com/chuckpreslar/codex/tree/managers"
+  "reflect"
   "strings"
 )
 
@@ -13,7 +15,7 @@ func parseStringBinding(formatter string, bindings ...interface{}) string {
   for _, binding := range bindings {
     formatter = strings.Replace(formatter, BINDING_CHARACTER, tagBindingVariable(binding), 1)
   }
-  
+
   return formatter
 }
 
@@ -34,13 +36,15 @@ func createModel(table Table, isNew bool) cartographer.Hook {
     base.definition = replica.Interface().(ModelInterface)
     base.table = table
     base.values, err = CARTOGRAPHER.FieldValueMapFor(replica.Interface())
-
     if isNew {
       base.isNew = true
     }
 
     embedded.Set(reflect.ValueOf(base))
-
     return
   }
+}
+
+func accessorFor(table Table) managers.Accessor {
+  return codex.Table(table.Name)
 }

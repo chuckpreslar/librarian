@@ -1,6 +1,7 @@
 package librarian
 
 import (
+  "fmt"
   "github.com/chuckpreslar/cartographer"
   "github.com/chuckpreslar/codex"
   "github.com/chuckpreslar/codex/tree/managers"
@@ -156,4 +157,31 @@ func InitializeRelation(table Table) (relation *Relation) {
   relation.Mananger = managers.Selection(relation.Accessor.Relation())
 
   return
+}
+
+func Insert(values, columns []interface{}, model *Model) error {
+  accessor := accessorFor(model.table)
+  manager := managers.Insertion(accessor.Relation()).Insert(values...)
+  for _, column := range columns {
+    column, err := CARTOGRAPHER.ColumnForField(model.definition, column.(string))
+
+    if nil != err {
+      return err
+    }
+
+    manager.Into(column)
+  }
+
+  if 0 < len(model.table.PrimaryKey) {
+    column, err := CARTOGRAPHER.ColumnForField(model.definition, model.table.PrimaryKey)
+
+    if nil != err {
+      return err
+    }
+
+    manager.Returning(column)
+  }
+
+  fmt.Println(manager.ToSql())
+  return nil
 }

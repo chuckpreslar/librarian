@@ -18,7 +18,7 @@ type Model struct {
 }
 
 func (self *Model) IsNew() bool {
-  return false
+  return self.isNew
 }
 
 func (self *Model) IsModified() bool {
@@ -30,6 +30,23 @@ func (self *Model) IsValid() bool {
 }
 
 func (self *Model) Save() error {
+  modified, err := CARTOGRAPHER.ModifiedColumnsValuesMapFor(self.values, self.definition)
+
+  if nil != err || 0 == len(modified) {
+    return err
+  }
+
+  if self.IsNew() {
+    var columns, values []interface{}
+
+    for column, value := range modified {
+      columns = append(columns, column)
+      values = append(values, value)
+    }
+
+    return Insert(values, columns, self)
+  }
+
   return nil
 }
 
