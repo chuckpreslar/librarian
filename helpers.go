@@ -36,6 +36,7 @@ func createModel(table Table, isNew bool) cartographer.Hook {
     base.definition = replica.Interface().(ModelInterface)
     base.table = table
     base.values, err = CARTOGRAPHER.FieldValueMapFor(replica.Interface())
+
     if isNew {
       base.isNew = true
     }

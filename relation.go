@@ -1,7 +1,6 @@
 package librarian
 
 import (
-  "fmt"
   "github.com/chuckpreslar/cartographer"
   "github.com/chuckpreslar/codex"
   "github.com/chuckpreslar/codex/tree/managers"
@@ -162,6 +161,7 @@ func InitializeRelation(table Table) (relation *Relation) {
 func Insert(values, columns []interface{}, model *Model) error {
   accessor := accessorFor(model.table)
   manager := managers.Insertion(accessor.Relation()).Insert(values...)
+
   for _, column := range columns {
     column, err := CARTOGRAPHER.ColumnForField(model.definition, column.(string))
 
@@ -182,6 +182,26 @@ func Insert(values, columns []interface{}, model *Model) error {
     manager.Returning(column)
   }
 
-  fmt.Println(manager.ToSql())
-  return nil
+  sql, err := manager.ToSql()
+
+  if nil != err {
+    return err
+  }
+
+  // FIXME: This should be a transaction.
+  stmt, err := connection.session.Prepare(sql)
+
+  if nil != err {
+    return err
+  }
+
+  rows, err := stmt.Query()
+
+  if nil != err {
+    return err
+  }
+
+  err = CARTOGRAPHER.Sync(rows, model.definition)
+
+  return err
 }
