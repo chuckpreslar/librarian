@@ -1,6 +1,7 @@
 package librarian
 
 import (
+  "errors"
   "github.com/chuckpreslar/cartographer"
   "github.com/chuckpreslar/codex"
   "github.com/chuckpreslar/codex/tree/managers"
@@ -158,6 +159,7 @@ func InitializeRelation(table Table) (relation *Relation) {
   return
 }
 
+// FIXME: Lots of duplicated code between insert and update, no bueno.
 func Insert(values, columns []interface{}, model *Model) error {
   accessor := accessorFor(model.table)
   manager := managers.Insertion(accessor.Relation()).Insert(values...)
@@ -202,6 +204,67 @@ func Insert(values, columns []interface{}, model *Model) error {
   }
 
   err = CARTOGRAPHER.Sync(rows, model.definition)
+
+  if nil != err {
+    return err
+  }
+
+  model.isNew = false
+  model.values, err = CARTOGRAPHER.FieldValueMapFor(model.definition)
+
+  return err
+}
+
+// FIXME: Lots of duplicated code between insert and update, no bueno.
+func Update(values, columns []interface{}, model *Model) error {
+  accessor := accessorFor(model.table)
+  manager := managers.Modification(accessor.Relation())
+
+  for _, column := range columns {
+    column, err := CARTOGRAPHER.ColumnForField(model.definition, column.(string))
+
+    if nil != err {
+      return err
+    }
+
+    manager.Set(column)
+  }
+
+  manager.To(values...)
+
+  if 0 < len(model.table.PrimaryKey) {
+    column, err := CARTOGRAPHER.ColumnForField(model.definition, model.table.PrimaryKey)
+
+    if nil != err {
+      return err
+    }
+
+    field, err := CARTOGRAPHER.FieldForColumn(model.definition, model.table.PrimaryKey)
+
+    if nil != err {
+      return err
+    }
+
+    manager.Where(accessor(column).Eq(model.values[field]))
+
+  } else {
+    return errors.New("Unable to update record missing value for primary key field.")
+  }
+
+  sql, err := manager.ToSql()
+
+  if nil != err {
+    return err
+  }
+
+  // FIXME: This should be a transaction.
+  stmt, err := connection.session.Prepare(sql)
+
+  if nil != err {
+    return err
+  }
+
+  _, err = stmt.Exec()
 
   return err
 }

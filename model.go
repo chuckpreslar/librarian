@@ -36,18 +36,18 @@ func (self *Model) Save() error {
     return err
   }
 
+  var columns, values []interface{}
+
+  for column, value := range modified {
+    columns = append(columns, column)
+    values = append(values, value)
+  }
+
   if self.IsNew() {
-    var columns, values []interface{}
-
-    for column, value := range modified {
-      columns = append(columns, column)
-      values = append(values, value)
-    }
-
     return Insert(values, columns, self)
   }
 
-  return nil
+  return Update(values, columns, self)
 }
 
 func (self *Model) Destroy() error {
