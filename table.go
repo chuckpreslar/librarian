@@ -1,5 +1,10 @@
 package librarian
 
+import (
+  "errors"
+  "fmt"
+)
+
 type Table struct {
   Name        string         // Name of the table the relation connects to.
   PrimaryKey  string         // Database column that is the models primary key.
@@ -60,6 +65,14 @@ func (self Table) Offset(offset int) *Relation {
 
 func (self Table) Lock() *Relation {
   return nil
+}
+
+func (self Table) Find(key interface{}) (interface{}, error) {
+  if 0 == len(self.PrimaryKey) {
+    return nil, errors.New(fmt.Sprintf("Table %s has no primary key to use with Find", self.Name))
+  }
+
+  return InitializeRelation(self).Find(key)
 }
 
 func (self Table) First() (interface{}, error) {

@@ -82,6 +82,19 @@ func (self *Relation) Lock() *Relation {
   return self
 }
 
+func (self *Relation) Find(key interface{}) (interface{}, error) {
+  column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
+
+  if nil != err {
+    return nil, err
+  }
+
+  accessor := accessorFor(self.Table)
+  self.Mananger.Where(accessor(column).Eq(key))
+
+  return self.First()
+}
+
 func (self *Relation) First() (interface{}, error) {
   self.Mananger.Limit(1)
 
@@ -89,7 +102,7 @@ func (self *Relation) First() (interface{}, error) {
     column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
 
     if nil != err {
-      panic(err)
+      return nil, err
     }
 
     self.Mananger.Order(self.Accessor(column).Asc())
@@ -113,7 +126,7 @@ func (self *Relation) Last() (interface{}, error) {
     column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
 
     if nil != err {
-      panic(err)
+      return nil, err
     }
 
     self.Mananger.Order(self.Accessor(column).Desc())
