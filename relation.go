@@ -69,10 +69,12 @@ func (self *Relation) Having() *Relation {
 }
 
 func (self *Relation) Limit(limit int) *Relation {
+  self.Mananger.Limit(limit)
   return self
 }
 
 func (self *Relation) Offset(offset int) *Relation {
+  self.Mananger.Offset(offset)
   return self
 }
 
