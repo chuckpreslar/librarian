@@ -36,20 +36,55 @@ var Users = librarian.Table{
 
 ## Basics
 
-### Querying
+### Querying existing records.
+
+Retrieving records stored within your table is simple.
+
+```go
+// Continuing from out `Usage` example above.
+users, err := Users.All()
+
+if nil != err {
+  // Handle your error.
+}
+
+for _, user := range users {
+  fmt.Println(user.(*User).FirstName)
+}
+```
 
 To select only certain columns from a table, you may pass their name's to your table's Select method.You may pass their name's as how they are represented on your struct, or their column represented by the fields `db` tag.
 
 ```go
-  // Continuing from out `Usage` example above.
-  Users.Select("id", "first_name").All()
+users, err := Users.Select("id", "first_name").All()
 ```
 
 To filter the results returned, use your tables Where method.  Currently, the Where method only accepts strings, replacing all binding charaters (`?`) with the additional arguments supplied.  Columns listed within the formatter string must be as they appear in the database.
 
 ```go
-  Users.Where("first_name = ? AND email LIKE ?", "Jon", "%@example.com").All()
+users, err := Users.Where("first_name = ? AND email LIKE ?", "Jon", "%@example.com").All()
 ```
+
+
+
+### Creating and Persiting Records
+
+To create a new records, there's one small gotcha' that you may have seen coming - you must type assert your models when you initially create them.
+
+```go
+user := Users.New().(*User)
+user.FirstName = "Jon"
+user.LastName = "Doe"
+user.Email = "jon@example.com"
+
+// user.IsNew() => true
+
+if err := user.Save(); nil != err {
+  // Time for some error handling.
+}
+```
+
+If you have assigned a value to your Table's `PrimaryKey` field, the field will be populated on a successful save.  Once your record has been persisted, it is just as easily updated with another call to `Save`.
 
 
 ## Documentation
