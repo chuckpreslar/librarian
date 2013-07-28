@@ -63,11 +63,37 @@ func (self Table) Lock() *Relation {
 }
 
 func (self Table) First() (interface{}, error) {
-  return InitializeRelation(self).First()
+  accessor := accessorFor(self)
+  relation := InitializeRelation(self)
+
+  if 0 < len(self.PrimaryKey) {
+    column, err := CARTOGRAPHER.ColumnForField(self.Model, self.PrimaryKey)
+
+    if nil != err {
+      panic(err)
+    }
+
+    relation.Order(accessor(column).Asc())
+  }
+
+  return relation.First()
 }
 
 func (self Table) Last() (interface{}, error) {
-  return InitializeRelation(self).Last()
+  accessor := accessorFor(self)
+  relation := InitializeRelation(self)
+
+  if 0 < len(self.PrimaryKey) {
+    column, err := CARTOGRAPHER.ColumnForField(self.Model, self.PrimaryKey)
+
+    if nil != err {
+      panic(err)
+    }
+
+    relation.Order(accessor(column).Desc())
+  }
+
+  return relation.First()
 }
 
 func (self Table) All() ([]interface{}, error) {

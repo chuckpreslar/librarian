@@ -52,7 +52,7 @@ func (self *Relation) Unique() *Relation {
   return self
 }
 
-func (self *Relation) Order(orderings ...string) *Relation {
+func (self *Relation) Order(orderings ...interface{}) *Relation {
   for _, ordering := range orderings {
     self.Mananger.Order(ordering)
   }
@@ -85,16 +85,6 @@ func (self *Relation) Lock() *Relation {
 func (self *Relation) First() (interface{}, error) {
   self.Mananger.Limit(1)
 
-  if 0 < len(self.Table.PrimaryKey) {
-    column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
-
-    if nil != err {
-      panic(err)
-    }
-
-    self.Mananger.Order(self.Accessor(column).Asc())
-  }
-
   results, err := self.All()
 
   if nil != err {
@@ -108,16 +98,6 @@ func (self *Relation) First() (interface{}, error) {
 
 func (self *Relation) Last() (interface{}, error) {
   self.Mananger.Limit(1)
-
-  if 0 < len(self.Table.PrimaryKey) {
-    column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
-
-    if nil != err {
-      panic(err)
-    }
-
-    self.Mananger.Order(self.Accessor(column).Desc())
-  }
 
   results, err := self.All()
 
