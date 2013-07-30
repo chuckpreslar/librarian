@@ -30,7 +30,7 @@ func (self *Model) IsValid() bool {
 }
 
 func (self *Model) Save() error {
-  modified, err := CARTOGRAPHER.ModifiedColumnsValuesMapFor(self.values, self.definition)
+  modified, err := Cartographer.ModifiedColumnsValuesMapFor(self.values, self.definition)
 
   if nil != err || 0 == len(modified) {
     return err

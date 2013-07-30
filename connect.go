@@ -6,14 +6,14 @@ import (
 )
 
 type Connection struct {
-  engine     string
-  options    string
-  session    *sql.DB
+  engine  string
+  options string
+  session *sql.DB
 }
 
 var connection *Connection
 
-func Connect(engine string, options string) (*Connection, error){
+func Connect(engine string, options string) (*Connection, error) {
   if nil != connection {
     if err := connection.session.Close(); nil != err {
       return nil, err
@@ -29,4 +29,12 @@ func Connect(engine string, options string) (*Connection, error){
   connection = &Connection{engine, options, database}
 
   return connection, nil
+}
+
+func Disconnect() {
+  if nil == connection {
+    return
+  }
+
+  connection.session.Close()
 }

@@ -2,12 +2,9 @@ package librarian
 
 import (
   "errors"
-  "github.com/chuckpreslar/cartographer"
   "github.com/chuckpreslar/codex"
   "github.com/chuckpreslar/codex/tree/managers"
 )
-
-var CARTOGRAPHER = cartographer.Initialize("db")
 
 type Relation struct {
   Table    Table
@@ -17,7 +14,7 @@ type Relation struct {
 
 func (self *Relation) Select(columns ...string) *Relation {
   for _, column := range columns {
-    column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, column)
+    column, err := Cartographer.ColumnForField(self.Table.Model, column)
 
     if nil != err {
       panic(err)
@@ -83,7 +80,7 @@ func (self *Relation) Lock() *Relation {
 }
 
 func (self *Relation) Find(key interface{}) (interface{}, error) {
-  column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
+  column, err := Cartographer.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
 
   if nil != err {
     return nil, err
@@ -99,7 +96,7 @@ func (self *Relation) First() (interface{}, error) {
   self.Mananger.Limit(1)
 
   if 0 < len(self.Table.PrimaryKey) {
-    column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
+    column, err := Cartographer.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
 
     if nil != err {
       return nil, err
@@ -123,7 +120,7 @@ func (self *Relation) Last() (interface{}, error) {
   self.Mananger.Limit(1)
 
   if 0 < len(self.Table.PrimaryKey) {
-    column, err := CARTOGRAPHER.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
+    column, err := Cartographer.ColumnForField(self.Table.Model, self.Table.PrimaryKey)
 
     if nil != err {
       return nil, err
@@ -151,6 +148,7 @@ func (self *Relation) All() (results []interface{}, err error) {
   }
 
   statement, err := connection.session.Prepare(sql)
+  defer statement.Close()
 
   if err != nil {
     return
@@ -162,7 +160,7 @@ func (self *Relation) All() (results []interface{}, err error) {
     return
   }
 
-  return CARTOGRAPHER.Map(rows, self.Table.Model, createModel(self.Table, false))
+  return Cartographer.Map(rows, self.Table.Model, createModel(self.Table, false))
 }
 
 func InitializeRelation(table Table) (relation *Relation) {
@@ -180,7 +178,7 @@ func Insert(values, columns []interface{}, model *Model) error {
   manager := managers.Insertion(accessor.Relation()).Insert(values...)
 
   for _, column := range columns {
-    column, err := CARTOGRAPHER.ColumnForField(model.definition, column.(string))
+    column, err := Cartographer.ColumnForField(model.definition, column.(string))
 
     if nil != err {
       return err
@@ -190,7 +188,7 @@ func Insert(values, columns []interface{}, model *Model) error {
   }
 
   if 0 < len(model.table.PrimaryKey) {
-    column, err := CARTOGRAPHER.ColumnForField(model.definition, model.table.PrimaryKey)
+    column, err := Cartographer.ColumnForField(model.definition, model.table.PrimaryKey)
 
     if nil != err {
       return err
@@ -206,26 +204,27 @@ func Insert(values, columns []interface{}, model *Model) error {
   }
 
   // FIXME: This should be a transaction.
-  stmt, err := connection.session.Prepare(sql)
+  statement, err := connection.session.Prepare(sql)
+  defer statement.Close()
 
   if nil != err {
     return err
   }
 
-  rows, err := stmt.Query()
+  rows, err := statement.Query()
 
   if nil != err {
     return err
   }
 
-  err = CARTOGRAPHER.Sync(rows, model.definition)
+  err = Cartographer.Sync(rows, model.definition)
 
   if nil != err {
     return err
   }
 
   model.isNew = false
-  model.values, err = CARTOGRAPHER.FieldValueMapFor(model.definition)
+  model.values, err = Cartographer.FieldValueMapFor(model.definition)
 
   return err
 }
@@ -236,7 +235,7 @@ func Update(values, columns []interface{}, model *Model) error {
   manager := managers.Modification(accessor.Relation())
 
   for _, column := range columns {
-    column, err := CARTOGRAPHER.ColumnForField(model.definition, column.(string))
+    column, err := Cartographer.ColumnForField(model.definition, column.(string))
 
     if nil != err {
       return err
@@ -248,13 +247,13 @@ func Update(values, columns []interface{}, model *Model) error {
   manager.To(values...)
 
   if 0 < len(model.table.PrimaryKey) {
-    column, err := CARTOGRAPHER.ColumnForField(model.definition, model.table.PrimaryKey)
+    column, err := Cartographer.ColumnForField(model.definition, model.table.PrimaryKey)
 
     if nil != err {
       return err
     }
 
-    field, err := CARTOGRAPHER.FieldForColumn(model.definition, model.table.PrimaryKey)
+    field, err := Cartographer.FieldForColumn(model.definition, model.table.PrimaryKey)
 
     if nil != err {
       return err
@@ -273,13 +272,14 @@ func Update(values, columns []interface{}, model *Model) error {
   }
 
   // FIXME: This should be a transaction.
-  stmt, err := connection.session.Prepare(sql)
+  statement, err := connection.session.Prepare(sql)
+  defer statement.Close()
 
   if nil != err {
     return err
   }
 
-  _, err = stmt.Exec()
+  _, err = statement.Exec()
 
   return err
 }

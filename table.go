@@ -13,7 +13,7 @@ type Table struct {
 }
 
 func (self Table) New() ModelInterface {
-  var replica, err = CARTOGRAPHER.CreateReplica(self.Model, createModel(self, true))
+  var replica, err = Cartographer.CreateReplica(self.Model, createModel(self, true))
 
   if nil != err {
     panic(err)
