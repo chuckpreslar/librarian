@@ -147,12 +147,13 @@ func (self *Relation) All() (results []interface{}, err error) {
     return
   }
 
-  statement, err := connection.session.Prepare(sql)
-  defer statement.Close()
+  statement, err := Database.Prepare(sql)
 
   if err != nil {
     return
   }
+
+  defer statement.Close()
 
   rows, err := statement.Query()
 
@@ -204,12 +205,13 @@ func Insert(values, columns []interface{}, model *Model) error {
   }
 
   // FIXME: This should be a transaction.
-  statement, err := connection.session.Prepare(sql)
-  defer statement.Close()
+  statement, err := Database.Prepare(sql)
 
   if nil != err {
     return err
   }
+
+  defer statement.Close()
 
   rows, err := statement.Query()
 
@@ -272,12 +274,13 @@ func Update(values, columns []interface{}, model *Model) error {
   }
 
   // FIXME: This should be a transaction.
-  statement, err := connection.session.Prepare(sql)
-  defer statement.Close()
+  statement, err := Database.Prepare(sql)
 
   if nil != err {
     return err
   }
+
+  defer statement.Close()
 
   _, err = statement.Exec()
 
