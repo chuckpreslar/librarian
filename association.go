@@ -7,5 +7,9 @@ type Association interface {
 type HasMany struct {
   Table      Table
   Through    Table
-  ForiegnKey string
+  ForeignKey string
+}
+
+func (self HasMany) ToRelation() *Relation {
+  return nil
 }

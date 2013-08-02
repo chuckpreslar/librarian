@@ -46,6 +46,17 @@ func createModel(table Table, isNew bool) cartographer.Hook {
   }
 }
 
+func bindingsFor(elements []interface{}) (bindings []interface{}) {
+  length := len(elements)
+  bindings = make([]interface{}, length)
+
+  for i := 0; i < length; i++ {
+    bindings[i] = Binding
+  }
+
+  return
+}
+
 func accessorFor(table Table) managers.Accessor {
   return codex.Table(table.Name)
 }

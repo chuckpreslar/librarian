@@ -11,12 +11,12 @@ type DatabaseConnection struct {
   connection *sql.DB
 }
 
-func (database *DatabaseConnection) Prepare(sql string) (*sql.Stmt, error) {
-  return database.connection.Prepare(sql)
+func (engine *DatabaseConnection) Prepare(sql string) (*sql.Stmt, error) {
+  return engine.connection.Prepare(sql)
 }
 
-func (database *DatabaseConnection) Begin(sql string) (*sql.Tx, error) {
-  return database.connection.Begin()
+func (engine *DatabaseConnection) Begin(sql string) (*sql.Tx, error) {
+  return engine.connection.Begin()
 }
 
 func Connect(engine string, options string) (*DatabaseConnection, error) {

@@ -6,10 +6,10 @@ import (
 )
 
 type Table struct {
-  Name        string         // Name of the table the relation connects to.
-  PrimaryKey  string         // Database column that is the models primary key.
-  Model       ModelInterface // Model calling Table's New method generates.
-  Reflections []ReflectionInterface
+  Name         string         // Name of the table the relation connects to.
+  PrimaryKey   string         // Database column that is the models primary key.
+  Model        ModelInterface // Model calling Table's New method generates.
+  Associations []Association
 }
 
 func (self Table) New() ModelInterface {

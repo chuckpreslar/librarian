@@ -2,6 +2,7 @@ package librarian
 
 import (
   "errors"
+  "fmt"
   "github.com/chuckpreslar/codex"
   "github.com/chuckpreslar/codex/tree/managers"
 )
@@ -141,7 +142,7 @@ func (self *Relation) Last() (interface{}, error) {
 }
 
 func (self *Relation) All() (results []interface{}, err error) {
-  sql, err := self.Mananger.ToSql()
+  sql, err := self.Mananger.Engine(Database.engine).ToSql()
 
   if err != nil {
     return
@@ -176,7 +177,7 @@ func InitializeRelation(table Table) (relation *Relation) {
 // FIXME: Lots of duplicated code between insert and update, no bueno.
 func Insert(values, columns []interface{}, model *Model) error {
   accessor := accessorFor(model.table)
-  manager := managers.Insertion(accessor.Relation()).Insert(values...)
+  manager := managers.Insertion(accessor.Relation()).Insert(bindingsFor(values)...)
 
   for _, column := range columns {
     column, err := Cartographer.ColumnForField(model.definition, column.(string))
@@ -198,11 +199,13 @@ func Insert(values, columns []interface{}, model *Model) error {
     manager.Returning(column)
   }
 
-  sql, err := manager.ToSql()
+  sql, err := manager.Engine(Database.engine).ToSql()
 
   if nil != err {
     return err
   }
+
+  fmt.Println(sql)
 
   // FIXME: This should be a transaction.
   statement, err := Database.Prepare(sql)
@@ -213,7 +216,7 @@ func Insert(values, columns []interface{}, model *Model) error {
 
   defer statement.Close()
 
-  rows, err := statement.Query()
+  rows, err := statement.Query(values...)
 
   if nil != err {
     return err
@@ -267,7 +270,7 @@ func Update(values, columns []interface{}, model *Model) error {
     return errors.New("Unable to update record missing value for primary key field.")
   }
 
-  sql, err := manager.ToSql()
+  sql, err := manager.Engine(Database.engine).ToSql()
 
   if nil != err {
     return err
