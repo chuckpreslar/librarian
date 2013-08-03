@@ -1,6 +1,11 @@
 #librarian
 
-An ORM for Go. As of right now, this is a simple prototype and is under heavy development.  
+An ORM for Go. As of right now, this is a simple prototype and is under heavy development.
+
+## Dependencies
+
+[Codex](http://www.github.com/chuckpreslar/codex)
+[Cartographer](http://www.github.com/chuckpreslar/cartographer)
 
 ## Installation
 
