@@ -2,16 +2,17 @@
 
 An ORM for Go. As of right now, this is a simple prototype and is under heavy development.
 
-## Dependencies
-
-*[Codex](http://www.github.com/chuckpreslar/codex)
-*[Cartographer](http://www.github.com/chuckpreslar/cartographer)
-
 ## Installation
 
 With Google's [Go](http://www.golang.org) installed on your machine:
 
     $ go get -u github.com/chuckpreslar/librarian
+
+## Dependencies
+
+__[Codex](http://www.github.com/chuckpreslar/codex)__ - A relational algebra for Go.
+
+__[Cartographer](http://www.github.com/chuckpreslar/cartographer)__ - Provides mapping from SQL query results to structs in Go.
 
 ## Usage
 
