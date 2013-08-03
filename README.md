@@ -5,6 +5,7 @@ An ORM for Go. As of right now, this is a simple prototype and is under heavy de
 ## Dependencies
 
 [Codex](http://www.github.com/chuckpreslar/codex)
+
 [Cartographer](http://www.github.com/chuckpreslar/cartographer)
 
 ## Installation
