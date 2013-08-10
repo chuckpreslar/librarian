@@ -1,4 +1,9 @@
+// Package librarian provides an ORM.
 package librarian
+
+import (
+  "errors"
+)
 
 type ModelInterface interface {
   IsNew() bool
@@ -8,21 +13,46 @@ type ModelInterface interface {
   Destroy() error
 }
 
-type ModelInterfaces []ModelInterface
+const (
+  PERSISTED_MODEL = 0x0001
+  NEW_MODEL       = 0x0010
+  DIRTY_MODEL     = 0x0100
+)
+
+var (
+  ErrModificationCheck = errors.New("Failed to determine if the model has been modified.")
+)
 
 type Model struct {
   table      Table
   definition ModelInterface
   values     map[string]interface{}
-  isNew      bool
+  flags      uint8
 }
 
 func (self *Model) IsNew() bool {
-  return self.isNew
+  return 0 < (NEW_MODEL & self.flags)
 }
 
-func (self *Model) IsModified() bool {
-  return false
+func (self *Model) IsModified() (bool, error) {
+  if 0 < (DIRTY_MODEL & self.flags) {
+    return true, nil
+  }
+
+  values, err := Cartographer.FieldValueMapFor(self.definition)
+
+  if nil != err {
+    return false, ErrModificationCheck
+  }
+
+  for key, value := range self.values {
+    if values[key] != value {
+      self.flags = self.flags | DIRTY_MODEL
+      return true, nil
+    }
+  }
+
+  return false, nil
 }
 
 func (self *Model) IsValid() bool {
@@ -30,24 +60,7 @@ func (self *Model) IsValid() bool {
 }
 
 func (self *Model) Save() error {
-  modified, err := Cartographer.ModifiedColumnsValuesMapFor(self.values, self.definition)
-
-  if nil != err || 0 == len(modified) {
-    return err
-  }
-
-  var columns, values []interface{}
-
-  for column, value := range modified {
-    columns = append(columns, column)
-    values = append(values, value)
-  }
-
-  if self.IsNew() {
-    return Insert(values, columns, self)
-  }
-
-  return Update(values, columns, self)
+  return nil
 }
 
 func (self *Model) Destroy() error {

@@ -1,25 +1,34 @@
+// Package librarian provides an ORM.
 package librarian
 
 import (
   "errors"
-  "fmt"
+)
+
+var (
+  ErrNewFailed = errors.New("Failed to create new replica of model.")
 )
 
 type Table struct {
-  Name         string         // Name of the table the relation connects to.
-  PrimaryKey   string         // Database column that is the models primary key.
-  Model        ModelInterface // Model calling Table's New method generates.
-  Associations []Association
+  Name       string         // Name of the table the relation connects to.
+  PrimaryKey string         // Database column that is the models primary key.
+  Model      ModelInterface // Model calling Table's New method generates.
 }
 
-func (self Table) New() ModelInterface {
-  var replica, err = Cartographer.CreateReplica(self.Model, createModel(self, true))
+// Table errors.
+var (
+  ErrNoPrimaryKey = errors.New("Table has no primary key to use with Find.")
+)
+
+func (self Table) New() (ModelInterface, error) {
+  replica, err := Cartographer.CreateReplica(self.Model, CreateModelReplicaFor(self, NEW_MODEL))
 
   if nil != err {
-    panic(err)
+    err = ErrNewFailed
+    return nil, err
   }
 
-  return replica.Interface().(ModelInterface)
+  return replica.Interface().(ModelInterface), nil
 }
 
 func (self Table) DestroyAll() error {
@@ -27,11 +36,11 @@ func (self Table) DestroyAll() error {
 }
 
 func (self Table) Select(columns ...string) *Relation {
-  return InitializeRelation(self).Select(columns...)
+  return nil
 }
 
 func (self Table) Where(conditions ...interface{}) *Relation {
-  return InitializeRelation(self).Where(conditions...)
+  return nil
 
 }
 
@@ -56,11 +65,11 @@ func (self Table) Having() *Relation {
 }
 
 func (self Table) Limit(limit int) *Relation {
-  return InitializeRelation(self).Limit(limit)
+  return nil
 }
 
 func (self Table) Offset(offset int) *Relation {
-  return InitializeRelation(self).Offset(offset)
+  return nil
 }
 
 func (self Table) Lock() *Relation {
@@ -68,21 +77,17 @@ func (self Table) Lock() *Relation {
 }
 
 func (self Table) Find(key interface{}) (interface{}, error) {
-  if 0 == len(self.PrimaryKey) {
-    return nil, errors.New(fmt.Sprintf("Table %s has no primary key to use with Find", self.Name))
-  }
-
-  return InitializeRelation(self).Find(key)
+  return nil, nil
 }
 
 func (self Table) First() (interface{}, error) {
-  return InitializeRelation(self).First()
+  return nil, nil
 }
 
 func (self Table) Last() (interface{}, error) {
-  return InitializeRelation(self).Last()
+  return nil, nil
 }
 
 func (self Table) All() ([]interface{}, error) {
-  return InitializeRelation(self).All()
+  return nil, nil
 }
