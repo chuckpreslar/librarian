@@ -7,7 +7,7 @@ import (
 
 type ModelInterface interface {
   IsNew() bool
-  IsModified() bool
+  IsModified() (bool, error)
   IsValid() bool
   Save() error
   Destroy() error
@@ -26,8 +26,8 @@ var (
 type Model struct {
   table      Table
   definition ModelInterface
-  values     map[string]interface{}
-  flags      uint8
+  values     map[interface{}]interface{}
+  flags      uint16
 }
 
 func (self *Model) IsNew() bool {

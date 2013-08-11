@@ -54,7 +54,7 @@ var (
 )
 
 // Exposed functions.
-func CreateModelReplicaFor(table Table, flag uint8) cartographer.Hook {
+func CreateModelReplicaForHook(table Table, flag uint16) cartographer.Hook {
   return func(replica reflect.Value) (err error) {
     base := new(Model)
     embedded := replica.Elem().FieldByName("Model")
