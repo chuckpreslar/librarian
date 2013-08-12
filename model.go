@@ -13,10 +13,12 @@ type ModelInterface interface {
   Destroy() error
 }
 
+type Flag uint32
+
 const (
-  PERSISTED_MODEL = 0x0001
-  NEW_MODEL       = 0x0010
-  DIRTY_MODEL     = 0x0100
+  PERSISTED Flag = iota
+  NEW
+  DIRTY
 )
 
 var (
@@ -27,15 +29,15 @@ type Model struct {
   table      Table
   definition ModelInterface
   values     map[interface{}]interface{}
-  flags      uint16
+  flags      Flag
 }
 
 func (self *Model) IsNew() bool {
-  return 0 < (NEW_MODEL & self.flags)
+  return 0 < (NEW & self.flags)
 }
 
 func (self *Model) IsModified() (bool, error) {
-  if 0 < (DIRTY_MODEL & self.flags) {
+  if 0 < (DIRTY & self.flags) {
     return true, nil
   }
 
@@ -47,7 +49,7 @@ func (self *Model) IsModified() (bool, error) {
 
   for key, value := range self.values {
     if values[key] != value {
-      self.flags = self.flags | DIRTY_MODEL
+      self.flags = self.flags | DIRTY
       return true, nil
     }
   }
@@ -60,7 +62,15 @@ func (self *Model) IsValid() bool {
 }
 
 func (self *Model) Save() error {
-  return nil
+  if modified, err := self.IsModified(); !modified || nil != err {
+    return err
+  }
+
+  if self.IsNew() {
+    return InsertSingleRecord(self)
+  }
+
+  return UpdateSingleRecord(self)
 }
 
 func (self *Model) Destroy() error {

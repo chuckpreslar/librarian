@@ -15,13 +15,8 @@ type Table struct {
   Model      ModelInterface // Model calling Table's New method generates.
 }
 
-// Table errors.
-var (
-  ErrNoPrimaryKey = errors.New("Table has no primary key to use with Find.")
-)
-
 func (self Table) New() (ModelInterface, error) {
-  replica, err := Cartographer.CreateReplica(self.Model, CreateModelReplicaFor(self, NEW_MODEL))
+  replica, err := Cartographer.CreateReplica(self.Model, CreateModelReplicaForHook(self, NEW))
 
   if nil != err {
     err = ErrNewFailed
