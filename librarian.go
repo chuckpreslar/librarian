@@ -5,8 +5,6 @@ package librarian
 import (
   "database/sql"
   "errors"
-  "fmt"
-  "io"
   "os"
   "os/signal"
   "reflect"
@@ -20,8 +18,7 @@ import (
 
 // Package imports.
 import (
-  "github.com/chuckpreslar/cartographer"
-  "github.com/chuckpreslar/codex/tree/nodes"
+  "github.com/chuckpreslar/codex/nodes"
 )
 
 // Driver errors.
@@ -29,17 +26,6 @@ var (
   ErrConnectFailed     = errors.New("Failed to connect to the database.")
   ErrClosingConnection = errors.New("Failed to close connection to the database.")
 )
-
-// Logging setup.
-var log io.Writer = os.Stdout
-
-func WrtieToLog(line string) {
-  fmt.Fprintf(log, "%s\n", line)
-}
-
-func SetLogWriter(writer io.Writer) {
-  log = writer
-}
 
 // Database connection.
 var Connection struct {
@@ -49,20 +35,32 @@ var Connection struct {
 
 // Exposed variables.
 var (
-  Cartographer = cartographer.Initialize("db")
-  Binding      = nodes.Binding()
+  Binding = nodes.Binding()
 )
 
-// Exposed functions.
-func CreateModelReplicaForHook(table Table, flag Flag) cartographer.Hook {
+// CodexRelationFor returns a pointer to a RelationNode from the codex package.
+func CodexRelationFor(o interface{}) (relation *nodes.RelationNode) {
+  switch o.(type) {
+  case Table:
+    relation = nodes.Relation(o.(Table).Name)
+  case string:
+    relation = nodes.Relation(o.(string))
+  case *nodes.RelationNode:
+  }
+
+  return
+}
+
+type Hook func(reflect.Value) error
+
+// Hook to use when creating new model replicas.
+func CreateModelReplicaForHook(table Table, flag Flag) Hook {
   return func(replica reflect.Value) (err error) {
     base := new(Model)
     embedded := replica.Elem().FieldByName("Model")
 
     base.definition = replica.Interface().(ModelInterface)
     base.table = table
-    base.values, err = Cartographer.FieldValueMapFor(replica.Interface())
-
     base.flags = flag
 
     embedded.Set(reflect.ValueOf(base))
