@@ -48,58 +48,102 @@ const (
   TIMESTAMP = sql.TIMESTAMP
 )
 
+type MigrationRunner func(*Migrator)
+
 type Migration struct {
-  version   string           // Version string of the migration.
+  Up   MigrationRunner
+  Down MigrationRunner
+}
+
+type Migrator struct {
   modifiers []*TableModifier // Slice containing the migrations TableModifiers.
 }
 
-func (m *Migration) CreateTable(table string) (creator *TableCreator) {
+func (m *Migrator) CreateTable(table string) (creator *TableCreator) {
   creator = NewTableCreator(table)
   m.modifiers = append(m.modifiers, creator.modifier)
 
   return
 }
 
-func (m *Migration) ChangeTable(table string) (modifier *TableModifier) {
+func (m *Migrator) ChangeTable(table string) (modifier *TableModifier) {
   modifier = NewTableModifier(table)
   m.modifiers = append(m.modifiers, modifier)
 
   return
 }
 
-func (m *Migration) DropTable(table string) *Migration {
+func (m *Migrator) DropTable(table string) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.DropTable(table)
+
+  m.modifiers = append(m.modifiers, modifier)
+
   return m
 }
 
-func (m *Migration) AddIndex(typ sql.Constraint, table, name string, column ...string) *Migration {
+func (m *Migrator) AddIndex(typ sql.Constraint, table, name string, columns ...string) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.AddIndex(typ, name, columns...)
+
+  m.modifiers = append(m.modifiers, modifier)
   return m
 }
 
-func (m *Migration) RemoveIndexByColumn(table, column string) *Migration {
+func (m *Migrator) RemoveIndexByColumn(table, column string) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.RemoveIndexByColumn(column)
+
+  m.modifiers = append(m.modifiers, modifier)
   return m
 }
 
-func (m *Migration) RemoveIndexByName(table, index string) *Migration {
+func (m *Migrator) RemoveIndexByName(table, index string) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.RemoveIndexByIndex(index)
+
+  m.modifiers = append(m.modifiers, modifier)
+
   return m
 }
 
-func (m *Migration) AddColumn(table, name string, typ sql.Type, options ...ColumnOptions) *Migration {
+func (m *Migrator) AddColumn(table, name string, typ sql.Type, options ...ColumnOptions) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.AddColumn(name, typ, options...)
+
+  m.modifiers = append(m.modifiers, modifier)
+
   return m
 }
 
-func (m *Migration) ChangeColumn(table, name string, typ sql.Type, options ...ColumnOptions) *Migration {
+func (m *Migrator) ChangeColumn(table, name string, typ sql.Type, options ...ColumnOptions) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.ChangeColumn(name, typ, options...)
+
+  m.modifiers = append(m.modifiers, modifier)
+
   return m
 }
 
-func (m *Migration) RenameColumn(table, from, to string) *Migration {
+func (m *Migrator) RenameColumn(table, from, to string) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.RenameColumn(from, to)
+
+  m.modifiers = append(m.modifiers, modifier)
+
   return m
 }
 
-func (m *Migration) RemoveColumn(table, column string) *Migration {
+func (m *Migrator) RemoveColumn(table, column string) *Migrator {
+  modifier := NewTableModifier(table)
+  modifier.RemoveColumn(column)
+
+  m.modifiers = append(m.modifiers, modifier)
+
   return m
 }
 
-func (m *Migration) AppendTableModifier(alteration *TableModifier) *Migration {
+func (m *Migrator) AppendTableModifier(alteration *TableModifier) *Migrator {
   m.modifications = append(m.modifications, alteration)
 }
 
@@ -122,56 +166,64 @@ func NewTableModifier(table string) (modifier *TableModifier) {
   return
 }
 
-func (t *TableModifier) AddColumn(name string, typ sql.Type, options ...ColumnOptions) *TableModifier {
+func (t *TableModifier) DropTable(table string) *TableModifier {
   return t
 }
 
-func (t *TableModifier) RenameColumn(name string) *TableModifier {
+func (t *TableModifier) AddColumn(column string, typ sql.Type, options ...ColumnOptions) *TableModifier {
   return t
 }
 
-func (t *TableModifier) RemoveColumn(name string) *TableModifier {
+func (t *TableModifier) ChangeColumn(column string, typ sql.Type, options ...ColumnOptions) *TableModifier {
   return t
 }
 
-func (t *TableModifier) String(name string, options ...ColumnOptions) *TableModifier {
-  return t.AddColumn(name, STRING, options...)
+func (t *TableModifier) RenameColumn(from, to string) *TableModifier {
+  return t
 }
 
-func (t *TableModifier) Text() *TableModifier {
-  return t.AddColumn(name, TEXT, options...)
+func (t *TableModifier) RemoveColumn(column string) *TableModifier {
+  return t
 }
 
-func (t *TableModifier) Boolean() *TableModifier {
-  return t.AddColumn(name, BOOLEAN, options...)
+func (t *TableModifier) String(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, STRING, options...)
 }
 
-func (t *TableModifier) Integer() *TableModifier {
-  return t.AddColumn(name, INTEGER, options...)
+func (t *TableModifier) Text(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, TEXT, options...)
 }
 
-func (t *TableModifier) Float() *TableModifier {
-  return t.AddColumn(name, FLOAT, options...)
+func (t *TableModifier) Boolean(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, BOOLEAN, options...)
 }
 
-func (t *TableModifier) Decimal() *TableModifier {
-  return t.AddColumn(name, DECIMAL, options...)
+func (t *TableModifier) Integer(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, INTEGER, options...)
 }
 
-func (t *TableModifier) Date() *TableModifier {
-  return t.AddColumn(name, DATE, options...)
+func (t *TableModifier) Float(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, FLOAT, options...)
 }
 
-func (t *TableModifier) Time() *TableModifier {
-  return t.AddColumn(name, TIME, options...)
+func (t *TableModifier) Decimal(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, DECIMAL, options...)
 }
 
-func (t *TableModifier) DateTime() *TableModifier {
-  return t.AddColumn(name, DATETIME, options...)
+func (t *TableModifier) Date(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, DATE, options...)
 }
 
-func (t *TableModifier) TimeStamp() *TableModifier {
-  return t.AddColumn(name, TIMESTAMP, options...)
+func (t *TableModifier) Time(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, TIME, options...)
+}
+
+func (t *TableModifier) DateTime(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, DATETIME, options...)
+}
+
+func (t *TableModifier) TimeStamp(column string, options ...ColumnOptions) *TableModifier {
+  return t.AddColumn(column, TIMESTAMP, options...)
 }
 
 func (t *TableModifier) AddIndex(typ sql.Constraint, name string, columns ...string) *TableModifier {
@@ -263,6 +315,7 @@ func (t *TableCreator) TimeStamp() *TableCreator {
 }
 
 func (t *TableCreator) AddIndex(typ sql.Constraint, name string, columns ...string) *TableCreator {
+  t.modifier.AddIndex(typ, name, columns...)
   return t
 }
 
