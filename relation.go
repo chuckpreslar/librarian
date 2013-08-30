@@ -1,4 +1,2 @@
-// Package librarian provides an ORM.
+// Package librarian provides a RDMS agnostic ORM.
 package librarian
-
-type Relation struct{}
