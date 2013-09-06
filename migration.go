@@ -6,12 +6,12 @@ package librarian
 // stored in a RDMS.
 
 import (
-  "fmt"
+  _ "fmt"
 )
 
 import (
-  "github.com/chuckpreslar/codex"
   "github.com/chuckpreslar/codex/managers"
+  "github.com/chuckpreslar/codex/nodes"
   "github.com/chuckpreslar/codex/sql"
 )
 
@@ -52,6 +52,142 @@ const (
   TIMESTAMP = sql.TIMESTAMP
 )
 
+type Modifier interface {
+  ToSql() (string, error)
+}
+
+type ColumnOption uint8
+
+const (
+  Null ColumnOption = iota
+  Default
+)
+
+type ColumnOptions map[ColumnOption]interface{}
+
+type Creation struct {
+  relation *nodes.RelationNode
+  manager  *managers.CreateManager
+}
+
+func (c *Creation) AddColumn(column string, typ sql.Type, options ...ColumnOptions) *Creation {
+  c.manager.AddColumn(column, typ)
+
+  if 0 < len(options) {
+    if null, ok := options[0][Null]; ok {
+      if null, ok := null.(bool); ok && !null {
+        c.manager.AddConstraint(column, NOT_NULL)
+        return c
+      }
+    }
+
+    if def, ok := options[0][Default]; ok {
+      c.manager.AddConstraint(column, DEFAULT, def)
+    }
+  }
+
+  return c
+}
+
+func (c *Creation) String(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, STRING, options...)
+}
+
+func (c *Creation) Text(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, TEXT, options...)
+}
+
+func (c *Creation) Boolean(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, BOOLEAN, options...)
+}
+
+func (c *Creation) Integer(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, INTEGER, options...)
+}
+
+func (c *Creation) Float(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, FLOAT, options...)
+}
+
+func (c *Creation) Decimal(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, DECIMAL, options...)
+}
+
+func (c *Creation) Date(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, DATE, options...)
+}
+
+func (c *Creation) Time(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, TIME, options...)
+}
+
+func (c *Creation) Datetime(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, DATETIME, options...)
+}
+
+func (c *Creation) Timestamp(column string, options ...ColumnOptions) *Creation {
+  return c.AddColumn(column, TIMESTAMP, options...)
+}
+
+func (c *Creation) AddIndex(name string, kind sql.Constraint, columns []string, options ...interface{}) *Creation {
+  return c.manager.AddConstraint(column, kind, ...)
+}
+
+func (c *Creation) Unique(name string, columns ...string) *Creation {
+  return c
+}
+
+func (c *Creation) PrimaryKey(name, column string) *Creation {
+  return c
+}
+
+func (c *Creation) ForeignKey(name string, column string, reference string) *Creation {
+  return c
+}
+
+func (c *Creation) ToSql() (string, error) {
+  return c.manager.ToSql()
+}
+
+func NewCreation(table string) (creation *Creation) {
+  creation = new(Creation)
+  creation.relation = nodes.Relation(table)
+  creation.manager = managers.Creation(creation.relation)
+  return
+}
+
+type Alteration struct {
+  relation *nodes.RelationNode
+  manager  *managers.AlterManager
+}
+
+func (a *Alteration) ToSql() (string, error) {
+  return a.manager.ToSql()
+}
+
+func NewAlteration(table string) (alteration *Alteration) {
+  alteration = new(Alteration)
+  alteration.relation = nodes.Relation(table)
+  alteration.manager = managers.Alteration(alteration.relation)
+  return
+}
+
+type Migrator struct {
+  modifiers []Modifier
+}
+
+func (m *Migrator) CreateTable(table string) (creation *Creation) {
+  creation = NewCreation(table)
+  m.modifiers = append(m.modifiers, creation)
+  return
+}
+
+func (m *Migrator) AlterTable(table string) (alteration *Alteration) {
+  alteration = NewAlteration(table)
+  m.modifiers = append(m.modifiers, alteration)
+  return
+}
+
 type MigrationRunner func(*Migrator)
 
 func (m MigrationRunner) Run(migrator *Migrator) {
@@ -61,60 +197,4 @@ func (m MigrationRunner) Run(migrator *Migrator) {
 type Migration struct {
   Up   MigrationRunner
   Down MigrationRunner
-}
-
-type Modifier interface {
-  ToSql() (string, error)
-}
-
-type Migrator struct {
-  modifiers []Modifier // Slice containing the migrations TableModifiers.
-}
-
-type Alteration struct {
-  manager *managers.AlterManager
-}
-
-func (a *Alteration) AddColumn(c string, t sql.Type) *Alteration {
-  a.manager.AddColumn(c, t)
-  return a
-}
-
-func (a *Alteration) ChangeColumn(c string, t sql.Type) *Alteration {
-  a.manager.ModifyColumn(c, t)
-  return a
-}
-
-func (a *Alteration) RenameColumn() *Alteration {
-  return a
-}
-
-func (a *Alteration) RemoveColumn(c string) *Alteration {
-  a.manager.RemoveColumn(c)
-  return a
-}
-
-func (a *Alteration) AddIndex(c string, k sql.Constraint, o ...interface{}) *Alteration {
-  a.manager.AddConstraint(c, k, o...)
-  return a
-}
-
-func (a *Alteration) RemoveIndexByColumn() *Alteration {
-  return a
-}
-
-func (a *Alteration) RemoveIndexByName(i string) *Alteration {
-  a.manager.RemoveIndex(i)
-  return a
-}
-
-func (a *Alteration) ToSql() (string, error) {
-  return a.manager.ToSql()
-}
-
-func NewAlteration(table string) (alteration *Alteration) {
-  relation := codex.Table(table).Relation()
-  alteration = new(Alteration)
-  alteration.manager = managers.Alteration(relation)
-  return
 }
