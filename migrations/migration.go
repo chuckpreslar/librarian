@@ -93,6 +93,14 @@ func (c *Creation) AddIndex(columns Columns, kind sql.Constraint, name string, o
   return c
 }
 
+func (c *Creation) Unique(columns Columns, name ...interface{}) *Creation {
+  return c
+}
+
+func (c *Creation) ForeignKey(columns Columns, reference string, name ...interface{}) *Creation {
+  return c
+}
+
 func (c *Creation) ToSql() (string, error) {
   return c.manager.ToSql()
 }
