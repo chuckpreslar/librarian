@@ -25,7 +25,10 @@ func (t Table) New() (model ModelInterface) {
   return
 }
 
-func (t Table) Find() ModelInterface  { return nil }
+func (t Table) Find(key interface{}) (ModelInterface, error) {
+  return NewRelation(t).Find(key)
+}
+
 func (t Table) First() ModelInterface { return nil }
 func (t Table) Last() ModelInterface  { return nil }
 
