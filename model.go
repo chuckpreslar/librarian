@@ -19,6 +19,18 @@ func (m *Model) Table() *Table {
 	return m.table
 }
 
+func (m *Model) First() (*Record, error) {
+	return NewRelation(m).First()
+}
+
+func (m *Model) Last() (*Record, error) {
+	return NewRelation(m).Last()
+}
+
+func (m *Model) Find(key interface{}) (*Record, error) {
+	return NewRelation(m).Find(key)
+}
+
 type ModelDefiner func(*Definition)
 
 func (m ModelDefiner) DefineWith(definition *Definition) {
@@ -36,6 +48,8 @@ func DefineModel(definer ModelDefiner) *Model {
 
 	definition.model = model
 	definer.DefineWith(definition)
+
+	Librarian.models = append(Librarian.models, model)
 
 	return model
 }
