@@ -45,6 +45,16 @@ func (r *Relation) Find(key interface{}) (*Record, error) {
 	return r.First()
 }
 
+func (r *Relation) All() ([]*Record, error) {
+	query, err := r.manager.ToSql()
+
+	if nil != err {
+		return nil, err
+	}
+
+	return r.search(query)
+}
+
 func (r *Relation) Select(columns ...string) *Relation {
 	for i := 0; i < len(columns); i++ {
 		r.manager.Project(r.accessor(columns[i]))

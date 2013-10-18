@@ -40,6 +40,10 @@ func (m *Model) Find(key interface{}) (*Record, error) {
 	return NewRelation(m).Find(key)
 }
 
+func (m *Model) All() ([]*Record, error) {
+	return NewRelation(m).All()
+}
+
 func (m *Model) Select(columns ...string) *Relation {
 	return NewRelation(m).Select(columns...)
 }
