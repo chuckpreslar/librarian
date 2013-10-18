@@ -35,7 +35,7 @@ func (r *Record) Set(name string, value interface{}) *Record {
 		panic(fmt.Errorf("model for table `%s` has no attribute named `%s`", r.model.table.name, name))
 	}
 
-	r.values[attribute] = value
+	r.values[attribute] = attribute.ConvertValue(value)
 
 	for i := 0; i < len(r.modified); i++ {
 		if attribute == r.modified[i] {

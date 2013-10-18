@@ -1,5 +1,14 @@
 package librarian
 
+import (
+	"errors"
+)
+
+var (
+	errMissingTableName       = errors.New("missing table name")
+	errMissingTablePrimaryKey = errors.New("missing table primary key")
+)
+
 type Model struct {
 	table      *Table
 	attributes []*Attribute
@@ -31,6 +40,14 @@ func (m *Model) Find(key interface{}) (*Record, error) {
 	return NewRelation(m).Find(key)
 }
 
+func (m *Model) Select(columns ...string) *Relation {
+	return NewRelation(m).Select(columns...)
+}
+
+func (m *Model) Where(formater string, parameters ...interface{}) *Relation {
+	return NewRelation(m).Where(formater, parameters...)
+}
+
 type ModelDefiner func(*Definition)
 
 func (m ModelDefiner) DefineWith(definition *Definition) {
@@ -48,6 +65,12 @@ func DefineModel(definer ModelDefiner) *Model {
 
 	definition.model = model
 	definer.DefineWith(definition)
+
+	if "" == model.table.name {
+		panic(errMissingTableName)
+	} else if "" == model.table.key {
+		panic(errMissingTablePrimaryKey)
+	}
 
 	Librarian.models = append(Librarian.models, model)
 

@@ -3,22 +3,24 @@ package librarian
 import (
 	"database/sql"
 	"fmt"
+	"strings"
 )
 
 import (
-	"github.com/chuckpreslar/codex"
 	"github.com/chuckpreslar/codex/managers"
 )
 
 type Relation struct {
-	model    *Model
-	manager  *managers.SelectManager
-	accessor managers.Accessor
+	model      *Model
+	manager    *managers.SelectManager
+	accessor   managers.Accessor
+	parameters []interface{}
 }
 
 func (r *Relation) First() (*Record, error) {
-	query, err := r.manager.Order(r.accessor(r.model.table.key).Asc()).Limit(1).ToSql()
-
+	query, err := r.manager.
+		Order(r.accessor(r.model.table.key).Asc()).
+		Limit(1).SetAdapter(Librarian.adapter).ToSql()
 	if nil != err {
 		return nil, err
 	}
@@ -27,7 +29,9 @@ func (r *Relation) First() (*Record, error) {
 }
 
 func (r *Relation) Last() (*Record, error) {
-	query, err := r.manager.Order(r.accessor(r.model.table.key).Desc()).Limit(1).ToSql()
+	query, err := r.manager.
+		Order(r.accessor(r.model.table.key).Desc()).
+		Limit(1).SetAdapter(Librarian.adapter).ToSql()
 
 	if nil != err {
 		return nil, err
@@ -39,6 +43,26 @@ func (r *Relation) Last() (*Record, error) {
 func (r *Relation) Find(key interface{}) (*Record, error) {
 	r.manager.Where(r.accessor(r.model.table.key).Eq(key))
 	return r.First()
+}
+
+func (r *Relation) Select(columns ...string) *Relation {
+	for i := 0; i < len(columns); i++ {
+		r.manager.Project(r.accessor(columns[i]))
+	}
+
+	return r
+}
+
+func (r *Relation) Where(formater string, parameters ...interface{}) *Relation {
+	if "postgres" == Librarian.adapter {
+		for count := len(r.parameters) + 1; 0 < strings.Index(formater, "?"); count++ {
+			formater = strings.Replace(formater, "?", fmt.Sprintf("$%d", count), 1)
+		}
+	}
+
+	r.manager.Where(formater)
+	r.parameters = append(r.parameters, parameters...)
+	return r
 }
 
 func (r *Relation) one(query string) (*Record, error) {
@@ -64,27 +88,34 @@ func (r *Relation) search(query string) ([]*Record, error) {
 
 	if statement, err = Librarian.handle.Prepare(query); nil != err {
 		return nil, err
-	} else if rows, err = statement.Query(); nil != err {
+	} else if rows, err = statement.Query(r.parameters...); nil != err {
 		return nil, err
 	} else if columns, err = rows.Columns(); nil != err {
 		return nil, err
 	}
 
 	for rows.Next() {
-		ptr := make([]interface{}, len(columns))
+		buffer := make([]interface{}, len(columns))
 
-		for i := 0; i < len(ptr); i++ {
-			var buffer interface{}
-			ptr[i] = &buffer
+		for i := 0; i < len(buffer); i++ {
+			var item interface{}
+			buffer[i] = &item
 		}
 
-		if err = rows.Scan(ptr...); nil != err {
+		if err = rows.Scan(buffer...); nil != err {
 			return nil, err
 		} else {
 			record := r.model.New()
-			for i := 0; i < len(ptr); i++ {
-				record.Set(columns[i], (*ptr[i].(*interface{})))
+
+			for i := 0; i < len(buffer); i++ {
+				record.Set(columns[i], (*buffer[i].(*interface{})))
 			}
+
+			// Record was obtained from database,
+			// set Record's pristine flag to false
+			// and clear modified Attribute array.
+			record.pristine = false
+			record.modified = make([]*Attribute, 0)
 
 			records = append(records, record)
 		}
@@ -96,7 +127,7 @@ func (r *Relation) search(query string) ([]*Record, error) {
 func NewRelation(model *Model) *Relation {
 	relation := new(Relation)
 	relation.model = model
-	relation.accessor = codex.Table(model.table.name)
+	relation.accessor = model.Table().CodexAccessor()
 	relation.manager = managers.Selection(relation.accessor.Relation())
 
 	return relation

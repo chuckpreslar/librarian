@@ -10,15 +10,15 @@ import (
 
 var Librarian struct {
 	handle  *sql.DB
-	engine  string
+	adapter string
 	options string
 	models  []*Model
 }
 
 type Configuration struct{}
 
-func (c *Configuration) SetEngine(engine string) *Configuration {
-	Librarian.engine = engine
+func (c *Configuration) SetAdapter(adapter string) *Configuration {
+	Librarian.adapter = adapter
 	return c
 }
 
@@ -39,7 +39,7 @@ func Configure(configurator Configurator) error {
 
 	var err error
 
-	Librarian.handle, err = sql.Open(Librarian.engine, Librarian.options)
+	Librarian.handle, err = sql.Open(Librarian.adapter, Librarian.options)
 
 	if nil != err {
 		panic(err)
