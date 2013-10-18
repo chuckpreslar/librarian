@@ -94,6 +94,9 @@ func (r *Relation) search(query string) ([]*Record, error) {
 		return nil, err
 	}
 
+	defer statement.Close()
+	defer rows.Close()
+
 	for rows.Next() {
 		buffer := make([]interface{}, len(columns))
 
